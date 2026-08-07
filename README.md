@@ -1,4 +1,5 @@
 # InterviewLens
+<<<<<<< HEAD
 
 A mock interview platform, built as a clean, modular portfolio project.
 
@@ -81,3 +82,6 @@ first — it defines what's explicitly in and out of scope.
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+=======
+AI-powered mock interview platform with real-time behavioral analysis.
+>>>>>>> 74cd870011664b1c5db73eb17104f6d556bae7e2
