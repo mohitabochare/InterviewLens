@@ -1,87 +1,26 @@
 # InterviewLens
-<<<<<<< HEAD
 
-A mock interview platform, built as a clean, modular portfolio project.
+An AI-powered mock interview analysis platform. Records a candidate's video and voice during a practice interview, analyzes their behavior in real time, and produces a scored report.
 
-> **Status:** early scaffold. Core AI/ML/CV/speech features are intentionally
-> not yet implemented — see [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) for why.
+> **Status:** core pipeline working end-to-end — vision analysis, voice analysis, and session persistence are all built and integrated. See [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) for known limitations and what's intentionally deferred.
 
-## What is this?
+## What it does
 
-InterviewLens aims to let users practice for job interviews through
-structured mock sessions, with feedback features planned for a later phase.
-Right now, the focus is on building a solid, well-organized foundation:
-a typed REST API, a clear data model, and a maintainable project structure.
+Run one command, sit through a short practice interview, and get back a real report:
+
+- **Vision analysis** — face detection, eye contact tracking, head pose, and a confidence score from a model trained on labeled interview footage
+- **Voice analysis** — speech-to-text transcription, speaking rate (words/min), filler word detection, and pause detection
+- **Session storage** — every interview is saved to a database and retrievable later via a REST API
 
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
-| Backend | Python 3.11+, FastAPI |
-| Backend testing | Pytest |
-| Frontend | TBD (see `frontend/README.md`) |
-| Database | SQLite (dev), swappable later |
+| Backend | Python 3.13, FastAPI |
+| Database | SQLite via SQLAlchemy |
+| Computer vision | OpenCV, MediaPipe (BlazeFace, Face Landmarker) |
+| Confidence scoring | scikit-learn logistic regression, trained on self-collected labeled data |
+| Speech-to-text | faster-whisper (local, no API key required) |
+| Testing | Pytest |
 
 ## Project structure
-
-```
-InterviewLens/
-├── backend/
-│   └── app/
-│       ├── main.py          # FastAPI app entrypoint
-│       ├── core/             # config, settings
-│       ├── api/routes/       # route handlers (thin)
-│       ├── services/         # business logic
-│       ├── models/           # DB models
-│       └── schemas/          # Pydantic request/response schemas
-├── frontend/                 # placeholder — framework TBD
-├── PROJECT_CONTEXT.md        # scope, architecture decisions, non-goals
-├── TODO.md                   # phased development checklist
-└── CHANGELOG.md
-```
-
-## Getting started (backend)
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-Then visit:
-- API root: http://127.0.0.1:8000
-- Interactive docs: http://127.0.0.1:8000/docs
-- Health check: http://127.0.0.1:8000/health
-
-## Running tests
-
-```bash
-cd backend
-pytest
-```
-
-## Roadmap
-
-See [TODO.md](./TODO.md) for the full phased plan. In short:
-
-1. ✅ Project scaffold
-2. Backend foundations (DB, real endpoints, tests)
-3. Auth
-4. Frontend
-5. Non-AI interview session flow
-6. AI features (question generation, feedback, speech/CV) — deferred
-
-## Contributing / scope notes
-
-This is a personal portfolio project. If you're an AI assistant or a future
-contributor picking this up, read [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)
-first — it defines what's explicitly in and out of scope.
-
-## License
-
-MIT — see [LICENSE](./LICENSE).
-=======
-AI-powered mock interview platform with real-time behavioral analysis.
->>>>>>> 74cd870011664b1c5db73eb17104f6d556bae7e2

@@ -1,62 +1,44 @@
-# Project Context
+## Current state (as of this session)
 
-This file exists so that anyone (including a future you, or an AI assistant
-helping you) can understand the intent, scope, and boundaries of this project
-without re-deriving them from scratch. Update this file whenever a scope or
-architecture decision changes.
+Built and verified working, end to end:
+- Vision pipeline: face detection, eye tracking (gaze measured relative to
+  eye socket, not frame — decoupled from head position), head pose, and a
+  logistic regression confidence model trained on self-collected labeled data
+- Voice pipeline: audio capture, speech-to-text (faster-whisper), speaking
+  rate, filler word detection, silence-based pause detection
+- Backend: full session lifecycle (start/end/get/list), persisted to SQLite
+- Integration: one script (`live_session.py`) runs a full interview —
+  camera capture, then audio capture — and submits a combined report
+- Answer intelligence: transcripts are evaluated against the STAR format
+  (Situation, Task, Action, Result) via the Gemini API, returning structured
+  strengths/improvements — genuinely wired into the live session flow, not
+  a standalone demo.
+## Known limitations
 
-## What this project is
-
-**InterviewLens** is a mock interview platform, built as a portfolio project
-to demonstrate clean, modular, production-style engineering practices — not
-to demonstrate AI/ML sophistication (yet).
-
-Target audience for the *code itself*: a recruiter or engineer skimming the
-repo should immediately understand the structure and see deliberate,
-readable decisions rather than framework sprawl.
-
-## Current scope (what exists or is actively being built)
-
-- A FastAPI backend with a clean, layered structure (`api → services → models`)
-- Basic REST endpoints for managing interview sessions
-- A frontend (framework TBD) that talks to the backend
-- Standard project hygiene: tests, docs, changelog, licensing
-
-## Explicitly out of scope for now
-
-Do not implement, scaffold, or add dependencies for any of the following
-until the project explicitly reaches "Phase 5" in `TODO.md`:
-
-- AI/ML question generation or answer evaluation
-- Computer vision (facial expression, eye contact, posture analysis)
-- Speech-to-text or audio processing
-- Any third-party AI API integration (OpenAI, Anthropic, etc.)
-
-This is a deliberate constraint, not an oversight. The goal right now is a
-solid, non-AI foundation: data models, API design, auth, and a working UI
-skeleton. AI features will be added later as isolated, swappable services —
-not bolted into the core request/response flow.
-
-## Architecture decisions and why
-
-| Decision | Reasoning |
-|---|---|
-| **FastAPI** over Flask/Django | Async-native, automatic OpenAPI docs, strong typing via Pydantic, minimal boilerplate — good fit for a solo portfolio project and for AI integrations later. |
-| **Layered backend (api / services / models / schemas)** | Keeps route handlers thin. Business logic lives in `services/`, so it's testable without spinning up HTTP. No repository pattern or DI framework — that's over-engineering for this project's size. |
-| **SQLite for early development** (planned) | Zero setup cost. Swappable for Postgres later since we're not hand-rolling raw SQL. |
-| **Frontend kept separate, framework undecided** | Backend and frontend should be independently deployable. Framework choice is deferred until Phase 3 so it isn't picked under scaffolding pressure. |
-| **No AI dependencies in `requirements.txt` yet** | Matches the explicit "not yet" scope above. Adding them early would create dead weight and misleading signals about project maturity. |
-
-## Non-goals
-
-- This is not trying to be a scalable, multi-tenant SaaS from day one.
-- No microservices. One backend service, one frontend, until there's a
-  concrete reason to split further.
-- No premature optimization — correctness and readability first.
-
-## How to use this file
-
-If you (or an AI assistant) are about to make an architectural decision —
-adding a new dependency, restructuring folders, introducing a new pattern —
-check here first. If it contradicts something above, either don't do it, or
-update this file to reflect the new decision *and* explain why.
+- The trained confidence model was fit on a small, self-collected dataset
+  (~150 labeled frames, one person, one room/lighting setup). It is not
+  claimed to generalize to other people, cameras, or environments.
+- Head pose detection uses landmark-ratio thresholds, not full 3D pose
+  estimation (yaw/pitch/roll). It can misclassify extreme angles.
+- Vision and voice capture currently run 
+- The interview question is currently a single hardcoded practice question
+  ("Tell me about a project you've worked on"), not dynamically generated
+  or selectable. Real interview variety is future work.
+- Answer evaluation depends on an external API (Gemini) and a network
+  connection — unlike vision and voice, which run entirely locally. If the
+  API is unavailable or the key is invalid, evaluation fails gracefully
+  (returns empty feedback) but the feature itself won't work offline.
+- The AI evaluator's judgment (what counts as "good" STAR structure) comes
+  from an off-the-shelf LLM's general reasoning, not from any interview-
+  specific training or validation against real hiring outcomes.
+**sequentially**, not
+  simultaneously — the camera loop finishes first, then a separate fixed
+  audio recording happens. A real interview would want both running at once;
+  this was a deliberate scope cut given time constraints.
+- The filler word list and the pause-detection silence threshold are
+  reasonable manual choices, not tuned against real interview data.
+- No AI-based answer evaluation yet (judging the *content* of what someone
+  said) — only behavioral signals (how they said it).
+- No frontend — the API and `/docs` (Swagger UI) are the only interfaces.
+- No authentication — sessions aren't tied to individual users.
+- SQLite is used for simplicity, not intended for concurrent/production use.

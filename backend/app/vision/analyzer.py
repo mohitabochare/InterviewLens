@@ -2,59 +2,56 @@ import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from app.vision.face_detector import FaceDetector
+from app.vision.eye_tracker import EyeTracker
+from app.vision.head_pose import HeadPose
+from app.vision.confidence import ConfidenceScorer
 
 
 class FaceAnalyzer:
     def __init__(self):
+        self.face_detector = FaceDetector()
+        self.eye_tracker = EyeTracker()
+        self.head_pose = HeadPose()
+        self.confidence_scorer = ConfidenceScorer()
 
-        model_path = "app/vision/models/blaze_face_short_range.tflite"
-
-        base_options = python.BaseOptions(
-            model_asset_path=model_path
-        )
-
-        options = vision.FaceDetectorOptions(
-            base_options=base_options,
+        landmarker_options = vision.FaceLandmarkerOptions(
+            base_options=python.BaseOptions(
+                model_asset_path="app/vision/models/face_landmarker.task"
+            ),
             running_mode=vision.RunningMode.IMAGE,
-            min_detection_confidence=0.6
+            num_faces=1
         )
-
-        self.detector = vision.FaceDetector.create_from_options(options)
+        self.landmarker = vision.FaceLandmarker.create_from_options(
+            landmarker_options
+        )
 
     def analyze(self, frame):
-
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
 
-        mp_image = mp.Image(
-            image_format=mp.ImageFormat.SRGB,
-            data=rgb
+        detected, face_count = self.face_detector.detect(frame, mp_image)
+
+        landmark_result = self.landmarker.detect(mp_image)
+        landmarks = (
+            landmark_result.face_landmarks[0]
+            if landmark_result.face_landmarks
+            else None
         )
 
-        detection_result = self.detector.detect(mp_image)
+        usable = detected and landmarks is not None
 
-        detected = False
+        eye_result = self.eye_tracker.analyze(landmarks)
+        head_result = self.head_pose.analyze(landmarks)
 
-        if detection_result.detections:
+        confidence_result = self.confidence_scorer.score(
+            eye_result, head_result, detected
+        )
 
-            detected = True
-
-            h, w, _ = frame.shape
-
-            for detection in detection_result.detections:
-
-                bbox = detection.bounding_box
-
-                x = bbox.origin_x
-                y = bbox.origin_y
-                width = bbox.width
-                height = bbox.height
-
-                cv2.rectangle(
-                    frame,
-                    (x, y),
-                    (x + width, y + height),
-                    (0, 255, 0),
-                    2,
-                )
-
-        return frame, detected
+        return frame, {
+            "face_detected": usable,
+            "faces": face_count,
+            "attention_score": eye_result["attention_score"],
+            "head_pose": head_result["head_pose"],
+            "confidence_score": confidence_result["confidence_score"]
+        }
